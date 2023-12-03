@@ -1,12 +1,34 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
 
-public class day3 {
+public class day3part2 {
+
+    class GridPosition {
+        int x;
+        int y;
+        public GridPosition(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            GridPosition other = (GridPosition) o;
+            return this.x == other.x && this.y == other.y;
+        }
+
+        @Override
+        public int hashCode() {
+            return Integer.parseInt(this.x + "" + this.y);
+        }
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
         ArrayList<ArrayList<Character>> grid = new ArrayList<ArrayList<Character>>();
-        Scanner scan = new Scanner(new File("day3diffdata.txt"));
+        Scanner scan = new Scanner(new File("day3data.txt"));
         while (scan.hasNextLine()) {
             String line = scan.nextLine();
             ArrayList<Character> lineGrid = new ArrayList<>();
@@ -16,10 +38,10 @@ public class day3 {
             grid.add(lineGrid);
         }
         System.out.println("grid size: " + grid.size());
+        day3part2 day3 = new day3part2();
+        int sum = day3.day3part2(grid);
+        System.out.println("SUM: " + sum);
 
-
-        int sum = day3(grid);
-        System.out.println("sum is: " + sum);
     }
 
     public static void printGrid(ArrayList<ArrayList<Character>> grid) {
@@ -31,8 +53,9 @@ public class day3 {
         }
     }
 
-    public static int day3(ArrayList<ArrayList<Character>> grid) {
+    public int day3part2(ArrayList<ArrayList<Character>> grid) {
         int sum = 0;
+        HashMap<GridPosition, ArrayList<Integer>> asterixNumbers = new HashMap<>();
         for (int i =0; i<grid.size(); i++) {
             for (int j =0; j< grid.get(i).size(); j++) {
 
@@ -51,15 +74,25 @@ public class day3 {
                         numberprint.append(grid.get(i).get(numberIndices.get(x)));
                     }
 
-                    boolean isValid = checkIfValidNumber(grid, numberIndices, i);
-                    System.out.println("number: " + numberprint + " is valid: " + isValid);
+                    GridPosition gridPosition = this.checkIfValidNumber(grid, numberIndices, i);
 
-                    if (isValid) {
+                    if (gridPosition != null) {
+                        System.out.println("number: " + numberprint + " gridPosition: " + gridPosition.x + " " + gridPosition.y);
+
                         StringBuilder number = new StringBuilder();
                         for (int x = 0; x< numberIndices.size(); x++) {
                             number.append(grid.get(i).get(numberIndices.get(x)));
                         }
-                        sum += Integer.parseInt(number.toString());
+                        if (asterixNumbers.containsKey(gridPosition)) {
+                            System.out.println("grid position exists");
+                            asterixNumbers.get(gridPosition).add(Integer.parseInt(number.toString()));
+
+                        } else {
+                            ArrayList<Integer> numbers = new ArrayList<>();
+                            numbers.add(Integer.parseInt(number.toString()));
+                            asterixNumbers.put(gridPosition, numbers);
+                        }
+
                         j = j + (numberIndices.size() - 1);
 
                     }
@@ -67,10 +100,19 @@ public class day3 {
                 }
             }
         }
+
+        for (GridPosition gridPosition : asterixNumbers.keySet()) {
+            ArrayList<Integer> numbers = asterixNumbers.get(gridPosition);
+            System.out.println(numbers);
+            if (numbers.size() == 2) {
+                sum += (numbers.get(0) * numbers.get(1));
+            }
+        }
         return sum;
     }
 
-    public static boolean checkIfValidNumber(ArrayList<ArrayList<Character>> grid, ArrayList<Integer> numberIndices, int i) {
+    //this will return the GridPosition of the Asterix
+    public GridPosition checkIfValidNumber(ArrayList<ArrayList<Character>> grid, ArrayList<Integer> numberIndices, int i) {
 
         ArrayList<Integer> rowIndices = new ArrayList<>();
 
@@ -100,15 +142,15 @@ public class day3 {
 
                 Character gridElement = grid.get(columnIndices.get(y)).get(rowIndices.get(x));
                 if (isValid(gridElement)) {
-                    return true;
+                    return new GridPosition(columnIndices.get(y), rowIndices.get(x));
                 }
             }
         }
-        return false;
+        return null;
     }
 
     public static boolean isValid(Character gridElement) {
-        return !Character.isDigit(gridElement) && !gridElement.equals(Character.valueOf('.'));
+        return gridElement.equals(Character.valueOf('*'));
     }
 
     public static ArrayList<Integer> getIndexOfCompleteNumber(ArrayList<Character> gridLine, int j) {
@@ -122,6 +164,7 @@ public class day3 {
         }
         return numberIndices;
     }
+
 
 
 }
